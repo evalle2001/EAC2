@@ -3,13 +3,14 @@ from django.test import TestCase
 # Create your tests here.
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.contrib.auth.models import User
 from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
  
 class MySeleniumTests(StaticLiveServerTestCase):
-    # carregar una BD de test
-    fixtures = ['testdb.json',]
+    #carregar una BD de test
+    #fixtures = ['testdb.json',]
  
     @classmethod
     def setUpClass(cls):
@@ -17,6 +18,11 @@ class MySeleniumTests(StaticLiveServerTestCase):
         opts = Options()
         cls.selenium = WebDriver(options=opts)
         cls.selenium.implicitly_wait(5)
+        # creem superusuari
+        user = User.objects.create_user("isard", "isard@isardvdi.com", "pirineus")
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
  
     @classmethod
     def tearDownClass(cls):
@@ -33,9 +39,9 @@ class MySeleniumTests(StaticLiveServerTestCase):
  
         # introduïm dades de login i cliquem el botó "Log in" per entrar
         username_input = self.selenium.find_element(By.NAME,"username")
-        username_input.send_keys('admin')
+        username_input.send_keys('isard')
         password_input = self.selenium.find_element(By.NAME,"password")
-        password_input.send_keys('admin123')
+        password_input.send_keys('pirineus')
         self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
  
         # testejem que hem entrat a l'admin panel comprovant el títol de la pàgina
@@ -65,14 +71,40 @@ class MySeleniumTests(StaticLiveServerTestCase):
 
         # introduïm dades de login i cliquem el botó "Log in" per entrar
         username_input = self.selenium.find_element(By.NAME,"username")
-        username_input.send_keys('admin')
+        username_input.send_keys('isard')
         password_input = self.selenium.find_element(By.NAME,"password")
-        password_input.send_keys('admin123')
+        password_input.send_keys('pirineus')
         self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
 
         driver = self.selenium
         elements = 0
-        #elements = driver.find_elements(By.XPATH, "//*[@id='myapp-choice' or @id='myapp-question']")
+        #Creem un superusuari a mà
+        driver.find_element(By.XPATH, "//*[@class='model-user']//a[@class='addlink']").click()
+        self.assertEqual( self.selenium.title , "Add user | Django site admin")
+        username_input = self.selenium.find_element(By.NAME,"username")
+        username_input.send_keys('admin123')
+        password1_input = self.selenium.find_element(By.NAME, "password1")
+        password1_input.send_keys('@€!0U@€!0U')
+        password2_input = self.selenium.find_element(By.NAME, "password2")
+        password2_input.send_keys('@€!0U@€!0U')
+        driver.find_element(By.XPATH, "//input[@value='Save']").click()
+
+        # Posem permisos de staff
+        self.assertEqual( self.selenium.title , "admin123 | Change user | Django site admin")
+        driver.find_element(By.NAME, "is_staff").click()
+        driver.find_element(By.NAME, "_save").click()
+        self.assertEqual( self.selenium.title , "Select user to change | Django site admin")
+        driver.find_element(By.XPATH, "/html/body/div[1]/header/div[2]/form/button").click()
+        self.assertEqual( self.selenium.title , "Logged out | Django site admin" )
+        driver.find_element(By.XPATH, "/html/body/div/div/main/div/p[2]/a").click()
+        # introduïm dades de login i cliquem el botó "Log in" per entrar
+        username_input = self.selenium.find_element(By.NAME,"username")
+        username_input.send_keys('isard')
+        password_input = self.selenium.find_element(By.NAME,"password")
+        password_input.send_keys('pirineus')
+        self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
+
+        # Revisem que vegi els choices i questions
         if  driver.find_elements(By.XPATH, "//*[@id='myapp-choice' or @id='myapp-question']"):
           elements = 1
         self.assertEqual(elements, 1, "No hay Choices o Questions")
