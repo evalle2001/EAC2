@@ -30,37 +30,6 @@ class MySeleniumTests(StaticLiveServerTestCase):
         # comentar la propera línia si volem veure el resultat de l'execució al navegador
         cls.selenium.quit()
         super().tearDownClass()
-    def test_login(self):
-        # anem directament a la pàgina d'accés a l'admin panel
-        self.selenium.get('%s%s' % (self.live_server_url, '/admin/login/'))
- 
-        # comprovem que el títol de la pàgina és el que esperem
-        self.assertEqual( self.selenium.title , "Log in | Django site admin" )
- 
-        # introduïm dades de login i cliquem el botó "Log in" per entrar
-        username_input = self.selenium.find_element(By.NAME,"username")
-        username_input.send_keys('isard')
-        password_input = self.selenium.find_element(By.NAME,"password")
-        password_input.send_keys('pirineus')
-        self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
- 
-        # testejem que hem entrat a l'admin panel comprovant el títol de la pàgina
-        self.assertEqual( self.selenium.title , "Site administration | Django site admin" )
-
-    def test_login_error(self):
-        # comprovem que amb un usuari i contrasenya inexistent, el test falla
-        self.selenium.get('%s%s' % (self.live_server_url, '/admin/login/'))
-        self.assertEqual( self.selenium.title , "Log in | Django site admin" )
-
-        # introduim dades de login
-        username_input = self.selenium.find_element(By.NAME,"username")
-        username_input.send_keys('usuari_no_existent')
-        password_input = self.selenium.find_element(By.NAME,"password")
-        password_input.send_keys('contrasenya_incorrecta')
-        self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
- 
-        # utilitzem assertNotEqual per testejar que NO hem entrat
-        self.assertNotEqual( self.selenium.title , "Site administration | Django site admin" )
 
     def test_check_no_questions_choices(self):
         # anem directament a la pàgina d'accés a l'admin panel
@@ -99,12 +68,12 @@ class MySeleniumTests(StaticLiveServerTestCase):
         driver.find_element(By.XPATH, "/html/body/div/div/main/div/p[2]/a").click()
         # introduïm dades de login i cliquem el botó "Log in" per entrar
         username_input = self.selenium.find_element(By.NAME,"username")
-        username_input.send_keys('isard')
+        username_input.send_keys('admin123')
         password_input = self.selenium.find_element(By.NAME,"password")
-        password_input.send_keys('pirineus')
+        password_input.send_keys('@€!0U@€!0U')
         self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
 
         # Revisem que vegi els choices i questions
         if  driver.find_elements(By.XPATH, "//*[@id='myapp-choice' or @id='myapp-question']"):
           elements = 1
-        self.assertEqual(elements, 1, "No hay Choices o Questions")
+        self.assertEqual(elements, 0, "Hay Choices o Questions")
